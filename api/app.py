@@ -1,15 +1,17 @@
 import os
-from flask import Flask, abort, render_template, request, make_response
-from flask_sqlalchemy import SQLAlchemy
+from collections import defaultdict, deque
 from datetime import datetime
+
+from flask import Flask, abort, make_response, render_template, request
+from flask_sqlalchemy import SQLAlchemy
 from pytz import timezone
-from collections import deque, defaultdict
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] =\
-    "sqlite:///" + os.path.join(basedir, "products.db")
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(
+    basedir, "products.db"
+)
 
 # If set to True, Flask-SQLAlchemy will track modifications of objects and emit signals.
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -29,8 +31,7 @@ class Element(db.Model):
     # If you have multiple clients on different platforms accessing the same database,
     # a server_default ensures that all clients will use the same defaults.
     date = db.Column(
-        db.DateTime(timezone=True),
-        default=datetime.now(tz=timezone("Europe/Moscow"))
+        db.DateTime(timezone=True), default=datetime.now(tz=timezone("Europe/Moscow"))
     )
 
     # Now - creation date attribute is a datetime object and
@@ -38,7 +39,13 @@ class Element(db.Model):
     # Instead, it contain some methods (like __str__, __repr__, isoformat, etc.)
     # that helps you get desired representation of datetime object.
     def __repr__(self):
-        return f"{self.id} - {self.parentId} - {self.name_of_element} - {self.price} - {self.date.isoformat()}"
+        return (
+            f"{self.id} - "
+            f"{self.parentId} - "
+            f"{self.name_of_element} - "
+            f"{self.price} - "
+            f"{self.date.isoformat()}"
+        )
 
 
 @app.route("/home")
@@ -63,9 +70,9 @@ def error_400() -> None:
         400 error.
     """
     abort(
-            make_response({"code": 400, "message": "Validation Failed"}, 400),
-            description="Невалидная схема документа или входные данные не верны."
-        )
+        make_response({"code": 400, "message": "Validation Failed"}, 400),
+        description="Невалидная схема документа или входные данные не верны.",
+    )
 
 
 def error_404() -> None:
@@ -77,9 +84,9 @@ def error_404() -> None:
         None.
     """
     abort(
-            make_response({"code": 404, "message": "Item not found"}, 404),
-            description="Категория/товар не найден."
-        )
+        make_response({"code": 404, "message": "Item not found"}, 404),
+        description="Категория/товар не найден.",
+    )
 
 
 def is_there_id_in_table(id: str) -> int:
@@ -144,7 +151,9 @@ def imports() -> (str, dict):
         element.price = price
         element.date = datetime.now(tz=timezone("Europe/Moscow"))
     else:
-        db.session.add(Element(parentId=parentId, name_of_element=name_of_element, price=price))
+        db.session.add(
+            Element(parentId=parentId, name_of_element=name_of_element, price=price)
+        )
         db.session.commit()
 
     # the Flask 200 default, the standard code for a successfully handled request
@@ -207,7 +216,9 @@ def delete_by_id(id: str) -> (str, dict):
     return render_template("success_page.html"), {"Refresh": "3; url=/home"}
 
 
-def create_dicts_with_prices_and_adjacency_lists(id: str) -> (int, dict, defaultdict, set):
+def create_dicts_with_prices_and_adjacency_lists(
+    id: str,
+) -> (int, dict, defaultdict, set):
     """Creates adjacency lists by id and parentID and
     also a dictionary "prices" with pairs {id: initial price}.
     Finds all IDs related to the category.
@@ -237,7 +248,9 @@ def create_dicts_with_prices_and_adjacency_lists(id: str) -> (int, dict, default
     return id, prices, parents_and_children_id, all_ids
 
 
-def find_price_for_each_id(id: int, prices: dict, adjacency_list: defaultdict) -> (int, int):
+def find_price_for_each_id(
+    id: int, prices: dict, adjacency_list: defaultdict
+) -> (int, int):
     """Recalculates prices taking into account the ID of children.
     The function works according to the DFS algorithm.
 
@@ -249,7 +262,7 @@ def find_price_for_each_id(id: int, prices: dict, adjacency_list: defaultdict) -
         Returns:
             The price of the item in question and
             the quantity of goods to the current moment.
-        """
+    """
     price_of_element = 0 if prices[id] is None else prices[id]
     num_of_products = 0 if prices[id] is None else 1
     for son_id in adjacency_list[id]:
@@ -275,15 +288,22 @@ def nodes() -> str:
             Returns nodes template if the GET method is used,
             otherwise, if successful, it returns info_by_id template with
             information about the elements.
-        """
+    """
     if request.method == "GET":
         return render_template("nodes.html")
 
     id = request.form["id"]
-    id, prices, parents_and_children_id, all_ids = create_dicts_with_prices_and_adjacency_lists(id)
+    (
+        id,
+        prices,
+        parents_and_children_id,
+        all_ids,
+    ) = create_dicts_with_prices_and_adjacency_lists(id)
     find_price_for_each_id(id, prices, parents_and_children_id)
 
-    return render_template("info_by_id.html", elements=Element.query.filter(Element.id.in_(all_ids)).all())
+    return render_template(
+        "info_by_id.html", elements=Element.query.filter(Element.id.in_(all_ids)).all()
+    )
 
 
 @app.route("/nodes/<id>")
@@ -298,8 +318,15 @@ def nodes_by_id(id: str) -> str:
         Returns:
             If successful, it returns info_by_id template with
             information about the elements.
-        """
-    id, prices, parents_and_children_id, all_ids = create_dicts_with_prices_and_adjacency_lists(id)
+    """
+    (
+        id,
+        prices,
+        parents_and_children_id,
+        all_ids,
+    ) = create_dicts_with_prices_and_adjacency_lists(id)
     find_price_for_each_id(id, prices, parents_and_children_id)
 
-    return render_template("info_by_id.html", elements=Element.query.filter(Element.id.in_(all_ids)).all())
+    return render_template(
+        "info_by_id.html", elements=Element.query.filter(Element.id.in_(all_ids)).all()
+    )
