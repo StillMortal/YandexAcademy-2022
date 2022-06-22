@@ -1,7 +1,6 @@
 import os
 from flask import Flask, abort, render_template, request, make_response
 from flask_sqlalchemy import SQLAlchemy
-
 from datetime import datetime
 from pytz import timezone
 
