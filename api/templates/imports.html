@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}
+Imports
+{% endblock %}
+
+{% block body %}
+<div>
+    <h1>Imports</h1>
+    <form method="post">
+        <input type="number" name="id" placeholder="Enter the ID to update the current record"><br>
+        <input type="number" name="parentId" placeholder="Enter the parent ID"><br>
+        <input type="text" name="name_of_element" placeholder="Enter the name of the item"><br>
+        <input type="number" name="price" placeholder="Enter the price"><br>
+        <input type="submit" value="Commit">
+    </form>
+</div>
+{% endblock %}

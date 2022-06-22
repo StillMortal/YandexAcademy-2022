@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block body %}
+    <h1>Elements</h1>
+    <div class="content">
+        {% for elem in elements %}
+            <div class="elem">
+                <p><b>id</b> = {{ elem.id }}</p>
+                <p><b>ParentId</b> = {{ elem.parentId }}</p>
+                <p><b>The name of the element</b>: {{ elem.name_of_element }}</p>
+                <p><b>Price</b>: {{ elem.price }}</p>
+                <p><b>Created at</b>: {{ elem.date.isoformat() }}</p>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
