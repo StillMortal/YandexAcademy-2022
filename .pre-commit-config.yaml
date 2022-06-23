@@ -10,7 +10,6 @@ repos:
     -   id: flake8
         args: [
                 --max-line-length=88,
-                --per-file-ignores=api/app.py:E203,
         ]
 
 -   repo: https://github.com/pre-commit/mirrors-isort
